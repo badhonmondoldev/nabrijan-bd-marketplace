@@ -7,12 +7,16 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const addresses = await prisma.address.findMany({
-    where: { userId: session.userId },
-    orderBy: { isDefault: 'desc' },
-  });
-
-  return NextResponse.json({ addresses });
+  try {
+    const addresses = await prisma.address.findMany({
+      where: { userId: session.userId },
+      orderBy: { isDefault: 'desc' },
+    });
+    return NextResponse.json({ addresses });
+  } catch (err) {
+    console.warn('Addresses GET DB query fallback engaged:', err);
+    return NextResponse.json({ addresses: [] });
+  }
 }
 
 export async function POST(request: Request) {
