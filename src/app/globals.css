@@ -2,8 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden !important;
+  scroll-behavior: smooth;
+}
+
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-slate-950 text-slate-100 antialiased selection:bg-pink-500 selection:text-white;
   }
+}
+
+/* Custom Cyberpunk Pink Glow Utilities */
+.pink-glow {
+  box-shadow: 0 0 25px rgba(255, 46, 147, 0.4);
+}
+
+.pink-glass {
+  background: rgba(255, 46, 147, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 105, 180, 0.25);
+}
+
+.text-gradient-pink {
+  background: linear-gradient(135deg, #ff71ce 0%, #ff2e93 50%, #b967ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

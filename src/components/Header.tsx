@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, Store, User, Search, Shield, LogOut, LayoutDashboard, Share2 } from 'lucide-react';
+import { ShoppingCart, Store, User, Search, Shield, LogOut, Share2, Sparkles } from 'lucide-react';
 import RoleSwitcher from './RoleSwitcher';
 import { motion } from 'framer-motion';
-import { PulseBadge } from './animations/MotionWrappers';
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
@@ -28,115 +27,102 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      {/* Top Bar for BD Localization & Announcements */}
-      <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 text-white text-xs py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-1 sm:space-y-0">
-          <div className="flex items-center space-x-3">
-            <span>🇧🇩 Bangladesh Multi-Vendor E-Commerce</span>
-            <span className="text-emerald-300">|</span>
-            <span className="text-emerald-200">Nationwide Delivery Network</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="font-semibold text-amber-300">Tagline: Buy. Sell. Earn. Grow.</span>
-            <span>bKash / Nagad / COD Enabled</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center space-x-2 group">
+    <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-pink-500/30 shadow-lg shadow-pink-950/30 max-w-full overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3 md:gap-4 max-w-full">
+        {/* Modern Pink Brand Logo */}
+        <Link href="/" className="flex items-center space-x-2 group flex-shrink-0">
           <motion.div
             whileHover={{ scale: 1.05, rotate: -1 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-emerald-600 text-white font-black text-xl px-3 py-1 rounded-lg tracking-wider shadow-md group-hover:bg-emerald-700 transition-colors"
+            className="bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-600 text-white font-black text-xl px-3.5 py-1.5 rounded-xl tracking-wider shadow-lg shadow-pink-500/30 flex items-center space-x-1.5"
           >
-            NABRIJAN
+            <span>NABRIJAN</span>
+            <Sparkles className="w-4 h-4 text-pink-200 animate-pulse" />
           </motion.div>
-          <div className="hidden md:flex flex-col">
-            <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest">MARKET</span>
-            <span className="text-[10px] text-slate-500 font-medium">Buy. Sell. Earn. Grow.</span>
+          <div className="hidden sm:flex flex-col">
+            <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-fuchsia-400 uppercase tracking-widest">
+              MARKET
+            </span>
+            <span className="text-[9px] text-pink-300/80 font-medium">Buy. Sell. Earn. Grow.</span>
           </div>
         </Link>
 
         {/* Search Bar */}
-        <div className="flex-1 max-w-xl hidden md:flex items-center relative">
+        <div className="flex-1 max-w-lg hidden md:flex items-center relative">
           <input
             type="text"
-            placeholder="Search Bangladeshi products, stores & wholesale categories..."
-            className="w-full pl-4 pr-10 py-2 border border-slate-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600"
+            placeholder="Search Bangladeshi products, stores & categories..."
+            className="w-full pl-4 pr-10 py-2 bg-slate-900/80 border border-pink-500/30 rounded-full text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500 transition shadow-inner"
           />
-          <button className="absolute right-1 top-1 text-white bg-emerald-600 p-1.5 rounded-full hover:bg-emerald-700">
-            <Search className="w-4 h-4" />
+          <button className="absolute right-1 top-1 text-white bg-gradient-to-r from-pink-500 to-rose-600 p-1.5 rounded-full hover:from-pink-600 hover:to-rose-700 shadow-md transition">
+            <Search className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Navigation & Controls */}
-        <div className="flex items-center space-x-4">
+        {/* Navigation Controls */}
+        <div className="flex items-center space-x-2.5 sm:space-x-4">
           {user ? (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <RoleSwitcher currentRole={user.activeRole} userRoles={user.roles} />
 
-              {/* Dynamic Dashboard Quick Link depending on active role */}
+              {/* Dynamic Dashboard Link */}
               {user.activeRole === 'SELLER' && (
                 <Link
                   href="/seller"
-                  className="flex items-center space-x-1 text-xs font-semibold bg-amber-500 text-white px-3 py-1.5 rounded-md hover:bg-amber-600 transition"
+                  className="flex items-center space-x-1 text-xs font-semibold bg-amber-500 text-white px-2.5 py-1.5 rounded-lg hover:bg-amber-600 transition shadow"
                 >
-                  <Store className="w-4 h-4" />
-                  <span className="hidden lg:inline">Vendor Panel</span>
+                  <Store className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Vendor</span>
                 </Link>
               )}
 
               {user.activeRole === 'AFFILIATE' && (
                 <Link
                   href="/affiliate"
-                  className="flex items-center space-x-1 text-xs font-semibold bg-purple-600 text-white px-3 py-1.5 rounded-md hover:bg-purple-700 transition"
+                  className="flex items-center space-x-1 text-xs font-semibold bg-purple-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-purple-700 transition shadow"
                 >
-                  <Share2 className="w-4 h-4" />
-                  <span className="hidden lg:inline">Affiliate Hub</span>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Affiliate</span>
                 </Link>
               )}
 
               {(user.activeRole === 'ADMIN' || user.activeRole === 'SUPER_ADMIN') && (
                 <Link
                   href="/admin"
-                  className="flex items-center space-x-1 text-xs font-semibold bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 transition"
+                  className="flex items-center space-x-1 text-xs font-semibold bg-rose-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-rose-700 transition shadow"
                 >
-                  <Shield className="w-4 h-4" />
-                  <span className="hidden lg:inline">Admin Panel</span>
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Admin</span>
                 </Link>
               )}
 
               <Link
                 href="/account"
-                className="flex items-center space-x-1 text-slate-700 hover:text-emerald-700 text-xs font-medium px-2 py-1 border border-slate-200 rounded-md"
+                className="flex items-center space-x-1 text-slate-200 hover:text-pink-400 text-xs font-medium px-2.5 py-1.5 border border-pink-500/30 rounded-lg bg-slate-900/60"
               >
-                <User className="w-4 h-4" />
+                <User className="w-3.5 h-3.5 text-pink-400" />
                 <span className="hidden sm:inline font-semibold">{user.name.split(' ')[0]}</span>
               </Link>
 
               <button
                 onClick={handleLogout}
-                className="text-slate-500 hover:text-red-600 p-1 rounded"
+                className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-900 transition"
                 title="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <div className="flex items-center space-x-2">
               <Link
                 href="/login"
-                className="text-xs font-semibold text-emerald-800 px-3 py-1.5 border border-emerald-600 rounded-md hover:bg-emerald-50"
+                className="text-xs font-bold text-pink-300 px-3 py-1.5 border border-pink-500/40 rounded-lg hover:bg-pink-500/10 transition"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="text-xs font-semibold text-white bg-emerald-600 px-3 py-1.5 rounded-md hover:bg-emerald-700 shadow-sm"
+                className="text-xs font-bold text-white bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-600 px-3 py-1.5 rounded-lg hover:brightness-110 shadow-md shadow-pink-500/20 transition"
               >
                 Register
               </Link>
@@ -145,12 +131,12 @@ export default function Header() {
 
           <Link
             href="/cart"
-            className="relative p-2 text-slate-700 hover:text-emerald-700"
+            className="relative p-2 text-slate-300 hover:text-pink-400 transition"
             title="Shopping Cart"
           >
-            <ShoppingCart className="w-6 h-6" />
+            <ShoppingCart className="w-5 h-5 text-pink-300" />
             {cartCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="absolute top-0 right-0 bg-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow">
                 {cartCount}
               </span>
             )}
