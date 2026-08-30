@@ -59,6 +59,8 @@ model User {
   notifications Notification[]
   rfqs          Rfq[]         @relation("BuyerRfqs")
   couponUsages  CouponUsage[]
+  followedStores StoreFollower[]
+  ticketMessages SellerTicketMessage[]
 
   @@index([email])
   @@index([phone])
@@ -208,6 +210,10 @@ model Store {
   adCampaigns  AdCampaign[]
   rfqQuotes    RfqQuote[]
   coupons      Coupon[]
+  documents    SellerDocument[]
+  followers    StoreFollower[]
+  violations   SellerViolation[]
+  supportTickets SellerSupportTicket[]
 
   @@index([ownerId])
   @@index([slug])
@@ -1174,4 +1180,108 @@ model RewardTransaction {
 
   @@index([accountId])
 }
+
+// ------------------------------------------------------
+// ENTERPRISE SELLER CENTER MODELS
+// ------------------------------------------------------
+
+model SellerDocument {
+  id          String   @id @default(uuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  docType     String   // TRADE_LICENSE, NID, TIN, BANK_PROOF, VAT
+  fileUrl     String
+  fileName    String
+  fileSize    Int
+  status      String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+  reviewNotes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([storeId])
+}
+
+model StoreFollower {
+  id        String   @id @default(uuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([storeId, userId])
+  @@index([storeId])
+  @@index([userId])
+}
+
+model SellerViolation {
+  id          String   @id @default(uuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category    String   // PROHIBITED_ITEM, FAKE_DISCOUNT, LATE_SHIPMENT, CUSTOMER_ABUSE
+  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  title       String
+  reason      String
+  penalty     String?
+  status      String   @default("ACTIVE") // ACTIVE, RESOLVED, APPEALED
+  createdAt   DateTime @default(now())
+
+  appeals     SellerAppeal[]
+  @@index([storeId])
+}
+
+model SellerAppeal {
+  id           String          @id @default(uuid())
+  violationId  String
+  violation    SellerViolation @relation(fields: [violationId], references: [id], onDelete: Cascade)
+  reason       String
+  evidenceJson String?
+  status       String          @default("SUBMITTED") // SUBMITTED, UNDER_REVIEW, ACCEPTED, REJECTED
+  createdAt    DateTime        @default(now())
+
+  @@index([violationId])
+}
+
+model SellerSupportTicket {
+  id        String   @id @default(uuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  subject   String
+  category  String   // ACCOUNT, VERIFICATION, ORDERS, PAYMENTS, TECHNICAL
+  priority  String   @default("MEDIUM")
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  SellerTicketMessage[]
+  @@index([storeId])
+}
+
+model SellerTicketMessage {
+  id        String              @id @default(uuid())
+  ticketId  String
+  ticket    SellerSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User                @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  message   String
+  isStaff   Boolean             @default(false)
+  createdAt DateTime            @default(now())
+
+  @@index([ticketId])
+}
+
+model SellerLearningArticle {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  category        String   // ONBOARDING, LISTING, SHIPPING, POLICY, MARKETING
+  content         String
+  readTimeMinutes Int      @default(5)
+  isFeatured      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([slug])
+  @@index([category])
+}
+
 
