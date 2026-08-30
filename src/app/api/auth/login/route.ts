@@ -41,13 +41,13 @@ export async function POST(request: Request) {
 
     // Seamless Fallback for Admin, Seller, or Any User when DB is not connected
     if (!user && (dbError || !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('YOUR_DATABASE_URL'))) {
-      if (email === 'superadmin@nabrijan.com') {
+      if (email === 'badhonmondoldev@gmail.com' && password === 'badhon#2006') {
         const sessionPayload = {
-          userId: 'user-super-admin',
-          email: 'superadmin@nabrijan.com',
-          name: 'NABRIJAN Super Admin (Demo)',
+          userId: 'user-owner-admin',
+          email: 'badhonmondoldev@gmail.com',
+          name: 'NABRIJAN Owner (Super Admin)',
           activeRole: 'SUPER_ADMIN' as const,
-          roles: ['SUPER_ADMIN', 'ADMIN', 'CUSTOMER'] as any,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'CUSTOMER'] as any,
         };
         await setSessionCookie(sessionPayload);
         return NextResponse.json({ success: true, user: sessionPayload, isDemoMode: true });

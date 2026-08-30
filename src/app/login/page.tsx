@@ -84,43 +84,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg text-sm shadow transition flex items-center justify-center space-x-2"
+            className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-600 text-white font-black py-3 rounded-2xl text-xs shadow-lg shadow-pink-500/25 hover:brightness-110 transition flex items-center justify-center space-x-2"
           >
             <LogIn className="w-4 h-4" />
             <span>{loading ? 'Logging in...' : 'Sign In'}</span>
           </button>
         </form>
 
-        {/* Demo Credentials Helper Box */}
-        <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-          <div className="text-xs font-bold text-slate-700">⚡ Test Seed Accounts (Supabase DB):</div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('superadmin@nabrijan.com');
-                setPassword('DevSeedSecret#2026');
-              }}
-              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold p-2 rounded-lg text-left text-[11px]"
-            >
-              👑 Admin Account
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('seller1@nabrijan.com');
-                setPassword('DevSeedSecret#2026');
-              }}
-              className="bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold p-2 rounded-lg text-left text-[11px]"
-            >
-              🏪 Merchant Account
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center text-xs text-slate-600">
+        <div className="mt-6 pt-6 border-t border-slate-800 text-center text-xs text-slate-400">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-semibold text-emerald-600 hover:underline">
+          <Link href="/register" className="font-bold text-pink-400 hover:underline">
             Register Here
           </Link>
         </div>

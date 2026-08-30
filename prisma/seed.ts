@@ -72,18 +72,21 @@ async function main() {
     return;
   }
 
-  const rawSeedPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD || 'DevSeedSecret#2026';
+  const rawSeedPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD || 'badhon#2006';
   const hashedPassword = await bcrypt.hash(rawSeedPassword, 10);
 
-  const superAdminEmail = process.env.BOOTSTRAP_ADMIN_EMAIL || 'superadmin@nabrijan.com';
+  const superAdminEmail = process.env.BOOTSTRAP_ADMIN_EMAIL || 'badhonmondoldev@gmail.com';
 
   // 3. Create Super Admin
   const superAdmin = await prisma.user.upsert({
     where: { email: superAdminEmail },
-    update: {},
+    update: {
+      passwordHash: hashedPassword,
+      defaultRole: 'SUPER_ADMIN',
+    },
     create: {
-      name: 'NABRIJAN Super Admin',
-      email: 'superadmin@nabrijan.com',
+      name: 'NABRIJAN Owner & Super Admin',
+      email: 'badhonmondoldev@gmail.com',
       phone: '+8801700000001',
       passwordHash: hashedPassword,
       defaultRole: 'SUPER_ADMIN',
