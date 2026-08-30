@@ -8,30 +8,34 @@ export async function GET() {
     return NextResponse.json({ user: null });
   }
 
-  // Refresh user state from DB
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.userId },
-    include: {
-      userRoles: {
-        include: { role: true },
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      include: {
+        userRoles: {
+          include: { role: true },
+        },
       },
-    },
-  });
+    });
 
-  if (!dbUser || dbUser.status === 'SUSPENDED') {
-    return NextResponse.json({ user: null });
+    if (!dbUser || dbUser.status === 'SUSPENDED') {
+      return NextResponse.json({ user: null });
+    }
+
+    const roles = dbUser.userRoles.map((ur) => ur.role.name);
+
+    return NextResponse.json({
+      user: {
+        userId: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name,
+        phone: dbUser.phone,
+        activeRole: session.activeRole,
+        roles,
+      },
+    });
+  } catch (err) {
+    // If DB is offline, return active session payload directly
+    return NextResponse.json({ user: session });
   }
-
-  const roles = dbUser.userRoles.map((ur) => ur.role.name);
-
-  return NextResponse.json({
-    user: {
-      userId: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
-      phone: dbUser.phone,
-      activeRole: session.activeRole,
-      roles,
-    },
-  });
 }

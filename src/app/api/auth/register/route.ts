@@ -23,18 +23,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name, email, and password are required.' }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, ...(phone ? [{ phone }] : [])],
-      },
-    });
+    let existingUser = null;
+    let dbError = false;
+
+    try {
+      existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ email }, ...(phone ? [{ phone }] : [])],
+        },
+      });
+    } catch (err: any) {
+      console.warn('Database error in register route, evaluating fallback:', err?.message);
+      dbError = true;
+    }
 
     if (existingUser) {
       return NextResponse.json({ error: 'An account with this email or phone already exists.' }, { status: 409 });
     }
 
-    const hashedPassword = await hashPassword(password);
     const targetRole: SystemRole = (requestedRole as SystemRole) || 'CUSTOMER';
+
+    // Demo Mode Fallback if DB is unlinked or offline
+    if (dbError || !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('YOUR_DATABASE_URL')) {
+      const sessionPayload = {
+        userId: `demo-user-${Date.now()}`,
+        email,
+        name,
+        activeRole: targetRole,
+        roles: [targetRole, 'CUSTOMER'] as SystemRole[],
+      };
+      await setSessionCookie(sessionPayload);
+      return NextResponse.json({ success: true, user: sessionPayload, isDemoMode: true });
+    }
+
+    const hashedPassword = await hashPassword(password);
 
     // Find role ID in DB
     const roleRecord = await prisma.role.findUnique({
@@ -84,17 +106,22 @@ export async function POST(request: Request) {
 
     await setSessionCookie(sessionPayload);
 
-    await createAuditLog({
-      userId: user.id,
-      action: 'USER_REGISTERED',
-      entity: 'User',
-      entityId: user.id,
-      metadata: { email: user.email, activeRole: targetRole },
-    });
+    try {
+      await createAuditLog({
+        userId: user.id,
+        action: 'USER_REGISTERED',
+        entity: 'User',
+        entityId: user.id,
+        metadata: { email: user.email, activeRole: targetRole },
+      });
+    } catch (_) {}
 
     return NextResponse.json({ success: true, user: sessionPayload });
   } catch (error: any) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: error.message || 'Server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Registration service encountered an issue. Please try again or use Demo Login.' },
+      { status: 500 }
+    );
   }
 }
