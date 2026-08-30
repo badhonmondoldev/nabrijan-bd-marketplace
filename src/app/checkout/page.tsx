@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { BANGLADESH_ADMINISTRATIVE_DATA } from '@/modules/addresses/data';
-import { CreditCard, Truck, CheckCircle, AlertCircle } from 'lucide-react';
+import { CreditCard, Truck, CheckCircle, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { createOwnPayIntent } from '@/lib/ownpay';
 
 export default function CheckoutPage() {
   const [fullName, setFullName] = useState('Sajid Rahman');
@@ -11,7 +12,7 @@ export default function CheckoutPage() {
   const [district, setDistrict] = useState('Dhaka');
   const [upazila, setUpazila] = useState('Dhanmondi');
   const [detailedAddress, setDetailedAddress] = useState('Flat 4A, Green Peace Apartment, Road 27');
-  const [paymentMethod, setPaymentMethod] = useState('BKASH');
+  const [paymentMethod, setPaymentMethod] = useState('OWNPAY_DIRECT');
   const [loading, setLoading] = useState(false);
   const [successOrders, setSuccessOrders] = useState<any[] | null>(null);
   const [error, setError] = useState('');
@@ -22,7 +23,7 @@ export default function CheckoutPage() {
     setError('');
 
     try {
-      // Create sample order payload
+      // 1. Create order payload
       const payload = {
         items: [
           {
@@ -50,6 +51,24 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Checkout failed');
 
+      // 2. Handle OwnPay Direct Gateway Redirect
+      if (paymentMethod === 'OWNPAY_DIRECT' || paymentMethod === 'BKASH' || paymentMethod === 'NAGAD') {
+        const primaryOrder = data.orders?.[0];
+        const intentResult = await createOwnPayIntent({
+          orderId: primaryOrder?.id || `ORD-${Date.now()}`,
+          amount: primaryOrder?.totalAmount || 11550,
+          customerName: fullName,
+          customerEmail: 'customer@nabrijan.com',
+          customerPhone: phone,
+          returnUrl: `${window.location.origin}/checkout/success`,
+        });
+
+        if (intentResult.checkoutUrl) {
+          window.location.href = intentResult.checkoutUrl;
+          return;
+        }
+      }
+
       setSuccessOrders(data.orders);
       localStorage.removeItem('nabrijan_cart');
     } catch (err: any) {
@@ -62,25 +81,25 @@ export default function CheckoutPage() {
   if (successOrders) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-4">
-        <div className="bg-emerald-100 text-emerald-800 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center">
-          <CheckCircle className="w-8 h-8 text-emerald-600" />
+        <div className="bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center shadow-lg">
+          <CheckCircle className="w-8 h-8 text-emerald-400" />
         </div>
-        <h1 className="text-2xl font-black text-slate-900">Order Placed Successfully!</h1>
-        <p className="text-xs text-slate-600">
+        <h1 className="text-2xl font-black text-white">Order Placed Successfully!</h1>
+        <p className="text-xs text-slate-300">
           Your order has been split and sent to the respective verified Bangladesh merchants for packing and shipment.
         </p>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 text-xs space-y-2 max-w-md mx-auto text-left font-mono">
-          <div className="font-bold text-slate-800 font-sans border-b pb-2">Order Summary ({successOrders.length} Order Records):</div>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-xs space-y-2 max-w-md mx-auto text-left font-mono">
+          <div className="font-bold text-pink-300 font-sans border-b border-slate-800 pb-2">Order Summary ({successOrders.length} Order Records):</div>
           {successOrders.map((o) => (
-            <div key={o.id} className="flex justify-between">
+            <div key={o.id} className="flex justify-between text-slate-300">
               <span>#{o.orderNumber}</span>
-              <span className="font-bold text-emerald-700">৳{o.totalAmount} ({o.paymentMethod})</span>
+              <span className="font-bold text-emerald-400">৳{o.totalAmount} ({o.paymentMethod})</span>
             </div>
           ))}
         </div>
 
-        <a href="/account" className="inline-block bg-slate-900 text-white text-xs font-bold px-6 py-3 rounded-xl">
+        <a href="/account" className="inline-block bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-600 text-white text-xs font-black px-6 py-3 rounded-2xl shadow-lg hover:brightness-110">
           View Orders in Dashboard
         </a>
       </div>
@@ -88,11 +107,19 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-black text-slate-900 mb-6">Secure Order Checkout</h1>
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="bg-gradient-to-r from-slate-900 via-pink-950 to-slate-900 border border-pink-500/40 p-6 rounded-3xl shadow-xl flex items-center justify-between">
+        <div>
+          <div className="inline-flex items-center space-x-2 bg-pink-950 border border-pink-500/40 text-pink-300 text-xs font-black px-3 py-1 rounded-full mb-2">
+            <ShieldCheck className="w-4 h-4 text-pink-400" />
+            <span>256-Bit SSL Encrypted Checkout</span>
+          </div>
+          <h1 className="text-2xl font-black text-white">Secure Checkout</h1>
+        </div>
+      </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 border border-red-200 text-xs p-3 rounded-xl flex items-center space-x-2 mb-6">
+        <div className="bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs p-4 rounded-2xl flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -100,135 +127,129 @@ export default function CheckoutPage() {
 
       <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Shipping Address Form */}
-        <div className="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4 text-xs">
-          <h2 className="text-sm font-bold text-slate-900 pb-2 border-b flex items-center space-x-2">
-            <Truck className="w-4 h-4 text-emerald-600" />
+        <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4 text-xs">
+          <h2 className="text-sm font-black text-white pb-2 border-b border-slate-800 flex items-center space-x-2">
+            <Truck className="w-4 h-4 text-pink-400" />
             <span>1. Delivery Address (Bangladesh)</span>
           </h2>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold mb-1">Full Name</label>
+              <label className="block font-bold text-slate-300 mb-1">Full Name</label>
               <input
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-pink-500"
               />
             </div>
             <div>
-              <label className="block font-semibold mb-1">Phone Number (+880)</label>
+              <label className="block font-bold text-slate-300 mb-1">Phone Number (+880)</label>
               <input
                 type="text"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-pink-500"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block font-semibold mb-1">Division</label>
-              <select value={division} onChange={(e) => setDivision(e.target.value)} className="w-full px-2 py-2 border rounded-lg">
+              <label className="block font-bold text-slate-300 mb-1">Division</label>
+              <select value={division} onChange={(e) => setDivision(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-pink-500">
                 {BANGLADESH_ADMINISTRATIVE_DATA.map((d) => (
                   <option key={d.name} value={d.name}>{d.name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block font-semibold mb-1">District</label>
-              <input type="text" value={district} onChange={(e) => setDistrict(e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+              <label className="block font-bold text-slate-300 mb-1">District</label>
+              <input type="text" value={district} onChange={(e) => setDistrict(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-pink-500" />
             </div>
             <div>
-              <label className="block font-semibold mb-1">Upazila / Thana</label>
-              <input type="text" value={upazila} onChange={(e) => setUpazila(e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+              <label className="block font-bold text-slate-300 mb-1">Upazila / Thana</label>
+              <input type="text" value={upazila} onChange={(e) => setUpazila(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-pink-500" />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold mb-1">Detailed Street Address</label>
-            <textarea rows={2} required value={detailedAddress} onChange={(e) => setDetailedAddress(e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+            <label className="block font-bold text-slate-300 mb-1">Detailed Street Address</label>
+            <textarea rows={2} required value={detailedAddress} onChange={(e) => setDetailedAddress(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-pink-500" />
           </div>
 
           {/* Payment Method Selector */}
-          <div className="pt-4 border-t space-y-3">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-              <CreditCard className="w-4 h-4 text-emerald-600" />
-              <span>2. Payment Option</span>
+          <div className="pt-4 border-t border-slate-800 space-y-3">
+            <h2 className="text-sm font-black text-white flex items-center space-x-2">
+              <CreditCard className="w-4 h-4 text-pink-400" />
+              <span>2. Select Payment Gateway</span>
             </h2>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setPaymentMethod('BKASH')}
-                className={`p-3 border rounded-xl font-bold text-xs text-left transition ${
-                  paymentMethod === 'BKASH' ? 'border-pink-600 bg-pink-50 text-pink-900' : 'border-slate-200'
+                onClick={() => setPaymentMethod('OWNPAY_DIRECT')}
+                className={`p-4 border rounded-2xl font-bold text-xs text-left transition flex items-center justify-between ${
+                  paymentMethod === 'OWNPAY_DIRECT' || paymentMethod === 'BKASH'
+                    ? 'border-pink-500 bg-pink-950/60 text-white shadow-lg shadow-pink-500/20'
+                    : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
                 }`}
               >
-                bKash Mobile Payment
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('NAGAD')}
-                className={`p-3 border rounded-xl font-bold text-xs text-left transition ${
-                  paymentMethod === 'NAGAD' ? 'border-orange-600 bg-orange-50 text-orange-900' : 'border-slate-200'
-                }`}
-              >
-                Nagad Mobile Payment
+                <div>
+                  <div className="font-black text-pink-300 flex items-center space-x-1">
+                    <span>OwnPay Direct Gateway</span>
+                    <Sparkles className="w-3 h-3 text-pink-400" />
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">bKash, Nagad, Rocket, Visa/Mastercard</div>
+                </div>
+                <span className="text-[10px] font-black bg-pink-950 text-pink-300 border border-pink-500/40 px-2 py-0.5 rounded-full">INSTANT</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
-                className={`p-3 border rounded-xl font-bold text-xs text-left transition ${
-                  paymentMethod === 'CASH_ON_DELIVERY' ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-slate-200'
+                className={`p-4 border rounded-2xl font-bold text-xs text-left transition flex items-center justify-between ${
+                  paymentMethod === 'CASH_ON_DELIVERY'
+                    ? 'border-emerald-500 bg-emerald-950/60 text-white shadow-lg'
+                    : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
                 }`}
               >
-                Cash on Delivery (COD)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('WALLET')}
-                className={`p-3 border rounded-xl font-bold text-xs text-left transition ${
-                  paymentMethod === 'WALLET' ? 'border-purple-600 bg-purple-50 text-purple-900' : 'border-slate-200'
-                }`}
-              >
-                Nabrijan User Wallet
+                <div>
+                  <div className="font-black text-emerald-300">Cash on Delivery (COD)</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Pay after inspecting package</div>
+                </div>
               </button>
             </div>
           </div>
         </div>
 
         {/* Complete Order Box */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 h-fit space-y-4 shadow-sm text-xs">
-          <h2 className="text-sm font-bold text-slate-900 pb-2 border-b">Order Confirmation</h2>
-          <div className="space-y-2 text-slate-600">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 h-fit space-y-4 shadow-xl text-xs">
+          <h2 className="text-sm font-black text-white pb-2 border-b border-slate-800">Order Confirmation</h2>
+          <div className="space-y-2 text-slate-400">
             <div className="flex justify-between">
               <span>Items Total</span>
-              <span className="font-bold text-slate-900">৳11,490</span>
+              <span className="font-bold text-white">৳11,490</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping Fee ({division})</span>
-              <span className="font-bold text-slate-900">৳{division === 'Dhaka' ? 60 : 120}</span>
+              <span className="font-bold text-white">৳{division === 'Dhaka' ? 60 : 120}</span>
             </div>
           </div>
 
-          <div className="border-t pt-3 flex justify-between items-baseline font-bold text-sm text-slate-900">
+          <div className="border-t border-slate-800 pt-3 flex justify-between items-baseline font-bold text-sm text-white">
             <span>Payable Amount</span>
-            <span className="text-xl font-black text-emerald-700">৳11,550</span>
+            <span className="text-xl font-black text-pink-400">৳11,550</span>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow text-xs flex items-center justify-center space-x-2"
+            className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-600 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-pink-500/25 hover:brightness-110 text-xs flex items-center justify-center space-x-2 transition"
           >
-            <span>{loading ? 'Processing Order...' : 'Confirm & Place Order'}</span>
+            <span>{loading ? 'Initiating Gateway...' : 'Confirm & Proceed to Payment'}</span>
           </button>
         </div>
       </form>
